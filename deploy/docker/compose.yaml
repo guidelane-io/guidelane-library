@@ -1,0 +1,23 @@
+# Guidelane Library with Docker Compose, on Docker's own network.
+#
+#   docker compose up -d
+#   docker compose logs library
+#
+# The logs show the address of the admin page and its setup code. Devices join this server by
+# its address, because an announcement over mDNS does not leave Docker's network. On Linux,
+# compose.host-network.yaml lets Guidelane Studio find the server on your network instead.
+services:
+  library:
+    image: ghcr.io/guidelane-io/guidelane-library:latest
+    container_name: guidelane-library
+    restart: unless-stopped
+    # The first start sets the server up in the volume. Later starts keep what is there.
+    command: ["run", "--init", "--data", ".", "--name", "Guidelane library"]
+    ports:
+      # Publish the port on your server's address on your network, not on every address.
+      - "192.168.1.20:7443:7443"
+    volumes:
+      - library:/data
+
+volumes:
+  library:

@@ -1,0 +1,131 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "guidelane-library.fullname" . }}
+  labels:
+    {{- include "guidelane-library.labels" . | nindent 4 }}
+spec:
+  # One server per data folder. A second replica would write the same files.
+  replicas: 1
+  serviceName: {{ include "guidelane-library.fullname" . }}
+  selector:
+    matchLabels:
+      {{- include "guidelane-library.selector" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "guidelane-library.selector" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- if .Values.tls.secretName }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- end }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.hostNetwork }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: library
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --config
+            - {{ include "guidelane-library.config" . }}
+            - run
+            {{- if not .Values.tls.secretName }}
+            # The data folder is a folder of its own on the volume, which the server can make
+            # owner-only. The root of a volume belongs to root on most storage.
+            - --init
+            - --data
+            - library
+            - --name
+            - {{ .Values.library.name | quote }}
+            {{- end }}
+          ports:
+            - name: library
+              containerPort: 7443
+              protocol: TCP
+          startupProbe:
+            exec:
+              command: ["/usr/local/bin/guidelane-library", "--config", {{ include "guidelane-library.config" . | quote }}, "health"]
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            exec:
+              command: ["/usr/local/bin/guidelane-library", "--config", {{ include "guidelane-library.config" . | quote }}, "health"]
+            periodSeconds: 30
+            timeoutSeconds: 10
+          readinessProbe:
+            exec:
+              command: ["/usr/local/bin/guidelane-library", "--config", {{ include "guidelane-library.config" . | quote }}, "health"]
+            periodSeconds: 15
+            timeoutSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            {{- if .Values.tls.secretName }}
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: tls
+              mountPath: /tls
+              readOnly: true
+            {{- end }}
+      {{- if .Values.tls.secretName }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "guidelane-library.fullname" . }}
+        - name: tls
+          secret:
+            secretName: {{ .Values.tls.secretName }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          {{- toYaml .Values.persistence.accessModes | nindent 10 }}
+        {{- if .Values.persistence.storageClass }}
+        storageClassName: {{ .Values.persistence.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}

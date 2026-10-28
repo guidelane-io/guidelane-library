@@ -1,0 +1,14 @@
+{{- if .Values.tls.secretName }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "guidelane-library.fullname" . }}
+  labels:
+    {{- include "guidelane-library.labels" . | nindent 4 }}
+data:
+  library.toml: |
+    listen = "0.0.0.0:7443"
+    data = "/data/library"
+    certificate = "/tls/tls.crt"
+    key = "/tls/tls.key"
+{{- end }}

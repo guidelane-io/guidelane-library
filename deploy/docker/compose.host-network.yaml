@@ -1,0 +1,20 @@
+# Guidelane Library with Docker Compose on the host's own network, on Linux only. The server
+# announces itself over mDNS on your network, so Guidelane Studio lists it on its Join page.
+#
+#   docker compose -f compose.host-network.yaml up -d
+#   docker compose -f compose.host-network.yaml logs library
+#
+# Docker Desktop on macOS and Windows has no host network to give, so use compose.yaml there.
+services:
+  library:
+    image: ghcr.io/guidelane-io/guidelane-library:latest
+    container_name: guidelane-library
+    restart: unless-stopped
+    network_mode: host
+    # --listen keeps the server to one address of the host. Leave it out to listen on every one.
+    command: ["run", "--init", "--data", ".", "--name", "Guidelane library", "--listen", "192.168.1.20:7443"]
+    volumes:
+      - library:/data
+
+volumes:
+  library:

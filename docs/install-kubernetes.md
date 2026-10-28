@@ -1,0 +1,118 @@
+# Install on Kubernetes
+
+The Helm chart runs the server as a StatefulSet with one replica and a persistent volume, and
+exposes it with a Service. It is published as an OCI chart, which needs Helm 3.8 or later.
+
+```sh
+helm install library oci://ghcr.io/guidelane-io/charts/guidelane-library \
+  --namespace guidelane --create-namespace \
+  --set library.name="Acme library"
+```
+
+Each chart version has the same number as the server it runs. Add `--version 0.1.0` to install
+a given one.
+
+## Reach the server from your network
+
+Devices connect from outside the cluster, so the server needs an address on your network. The
+chart creates a Service of type `LoadBalancer` by default. On a cluster on your own hardware, a
+load balancer such as MetalLB gives it an address:
+
+```sh
+helm install library oci://ghcr.io/guidelane-io/charts/guidelane-library \
+  --namespace guidelane --create-namespace \
+  --set service.loadBalancerIP=192.168.1.40
+```
+
+If you have no load balancer, use a NodePort. Devices then reach the server at a node's address
+and that port:
+
+```sh
+helm install library oci://ghcr.io/guidelane-io/charts/guidelane-library \
+  --namespace guidelane --create-namespace \
+  --set service.type=NodePort --set service.nodePort=30743
+```
+
+The server serves TLS itself, and devices check its key, so nothing in front of it may end the
+TLS connection. An Ingress that terminates TLS does not work. A plain TCP load balancer, a
+NodePort or a Gateway API `TLSRoute` with TLS passthrough does.
+
+## First start
+
+```sh
+kubectl get service --namespace guidelane
+kubectl logs statefulset/library-guidelane-library --namespace guidelane
+```
+
+The log shows the setup code for the admin page. Open `https://<address>:7443/admin` and go on
+with [First start](first-start.md). On the admin page's Server tab, enter the address devices
+use under "Address". This can be the load balancer's address or a DNS name for it.
+
+## mDNS in a cluster
+
+The pod network does not carry the server's mDNS announcement to your network, so Guidelane
+Studio does not list the server on its Join page. Devices join it by its address, an invitation
+link or managed settings, which is how most companies roll it out anyway.
+
+To announce the server on a node's network, run it on the node's own network:
+
+```sh
+--set hostNetwork=true
+```
+
+The pod then uses port 7443 on its node, and devices can reach it at the node's address.
+
+## Your company's certificate
+
+By default, the server creates its own certificate on its first start and keeps it on its
+volume. To use a certificate from your company's authority, store it as a TLS Secret and give
+its name to the chart:
+
+```sh
+kubectl create secret tls library-tls --namespace guidelane \
+  --cert=library.example.com.pem --key=library.example.com-key.pem
+helm upgrade library oci://ghcr.io/guidelane-io/charts/guidelane-library \
+  --namespace guidelane --reuse-values --set tls.secretName=library-tls
+```
+
+With `tls.secretName`, the chart gives the server a config file that points at the Secret. Read
+[Certificates](certificates.md) before you change a certificate the devices already know.
+
+## Values
+
+| Value | Default | What it does |
+|---|---|---|
+| `library.name` | `Guidelane library` | The server's name when it is first set up. |
+| `image.repository` | `ghcr.io/guidelane-io/guidelane-library` | The image. |
+| `image.tag` | the chart's version | The image's tag. |
+| `service.type` | `LoadBalancer` | `LoadBalancer`, `NodePort` or `ClusterIP`. |
+| `service.port` | `7443` | The Service's port. |
+| `service.loadBalancerIP` | empty | A fixed address from your load balancer. |
+| `service.nodePort` | empty | The node port, with `service.type=NodePort`. |
+| `service.externalTrafficPolicy` | `Local` | Keeps each device's own address, which the server uses to limit join and sign-in attempts. |
+| `service.annotations` | `{}` | Annotations for your load balancer, such as MetalLB's address pool. |
+| `hostNetwork` | `false` | Runs the pod on its node's network, so the server can announce itself over mDNS. |
+| `tls.secretName` | empty | A Secret of type `kubernetes.io/tls` with your company's certificate. |
+| `persistence.size` | `5Gi` | The size of the volume for the guides. |
+| `persistence.storageClass` | the cluster's default | The storage class of the volume. |
+| `resources` | 128 Mi requested, 1 Gi limit | Memory and CPU. The server holds up to two uploads in memory while it checks them. |
+| `nodeSelector`, `tolerations`, `affinity` | empty | Where the pod runs. |
+
+## Without Helm
+
+To apply plain manifests, render them from the chart and keep them in your own repository:
+
+```sh
+helm template library oci://ghcr.io/guidelane-io/charts/guidelane-library \
+  --namespace guidelane --set service.type=NodePort > guidelane-library.yaml
+kubectl apply --namespace guidelane -f guidelane-library.yaml
+```
+
+## Backups and upgrades
+
+Everything the server keeps is on its volume, in the `library` folder. Back the volume up with
+your usual tool, such as Velero or your storage's snapshots. To upgrade, run `helm upgrade` with
+the new chart version. The StatefulSet replaces the pod, the volume stays, and devices stay
+joined. [Backups, upgrades and removal](operations.md) has more.
+
+Keep one replica. Two servers on one data folder would write the same files.

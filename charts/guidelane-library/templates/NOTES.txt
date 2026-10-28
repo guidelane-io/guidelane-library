@@ -1,0 +1,18 @@
+Guidelane Library is starting as {{ include "guidelane-library.fullname" . }} in {{ .Release.Namespace }}.
+
+1. Find the server's address on your network:
+
+   kubectl get service {{ include "guidelane-library.fullname" . }} --namespace {{ .Release.Namespace }}
+
+2. Read the setup code for the admin page:
+
+   kubectl logs statefulset/{{ include "guidelane-library.fullname" . }} --namespace {{ .Release.Namespace }}
+
+3. Open https://<address>:{{ .Values.service.port }}/admin, enter the setup code and create the admin password.
+   On the Server tab, enter the address devices should use under "Address".
+
+{{- if not .Values.hostNetwork }}
+
+The pod network does not carry mDNS to your network, so Guidelane Studio does not list this server
+on its own. Devices join it by its address, an invitation link or managed settings.
+{{- end }}

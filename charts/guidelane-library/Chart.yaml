@@ -1,0 +1,17 @@
+apiVersion: v2
+name: guidelane-library
+description: Guidelane Library keeps one shared Guidelane Studio library for the devices that join it.
+type: application
+# The release workflow sets both to the server's version when it publishes the chart.
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/guidelane-io/guidelane-library
+sources:
+  - https://github.com/guidelane-io/guidelane-library
+keywords:
+  - guidelane
+  - documentation
+  - guides
+maintainers:
+  - name: Guidelane
+    url: https://www.guidelane.io

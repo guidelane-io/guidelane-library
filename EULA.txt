@@ -1,0 +1,8 @@
+Guidelane Library
+
+Copyright 2026 Guidelane. All rights reserved.
+
+This software is proprietary. You may install and use it only under the terms
+on which Guidelane made it available to you. You may not copy, modify,
+distribute, sublicense or reverse engineer it, except where those terms or the
+law allow it.

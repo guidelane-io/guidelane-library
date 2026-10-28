@@ -1,0 +1,54 @@
+image:
+  repository: ghcr.io/guidelane-io/guidelane-library
+  # Empty means the chart's appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+library:
+  # The name devices see the server under when it is first set up. The admin page can change it later.
+  name: Guidelane library
+
+service:
+  # Devices connect from outside the cluster, so the server needs an address on your network:
+  # a LoadBalancer (for example from MetalLB), or a NodePort.
+  type: LoadBalancer
+  port: 7443
+  # Set this to keep the same address, if your load balancer supports it.
+  loadBalancerIP: ""
+  nodePort: null
+  # Local keeps each device's own address, which the server uses to limit join and sign-in attempts.
+  externalTrafficPolicy: Local
+  annotations: {}
+
+# Runs the pod on the node's own network, so the server can announce itself to Guidelane Studio over
+# mDNS on that network. Only one pod can then use port 7443 on the node.
+hostNetwork: false
+
+# A certificate from your company's authority, as a Secret of type kubernetes.io/tls. When it is
+# empty, the server creates its own certificate when it is first set up and keeps it on its volume.
+tls:
+  secretName: ""
+
+persistence:
+  size: 5Gi
+  # Empty uses the cluster's default storage class.
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    # The server checks at most two uploads at once and holds each in memory. Allow for two of your
+    # largest guides.
+    memory: 1Gi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+podAnnotations: {}
+podLabels: {}

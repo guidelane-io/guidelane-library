@@ -1,0 +1,29 @@
+name: Check
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint the chart
+        run: |
+          helm lint charts/guidelane-library
+          helm lint charts/guidelane-library --set tls.secretName=library-tls --set hostNetwork=true
+          helm template library charts/guidelane-library > /dev/null
+
+      - name: Check the scripts
+        run: shellcheck install.sh deploy/proxmox/create-lxc.sh
+
+      - name: Check the Compose files
+        run: |
+          docker compose -f deploy/docker/compose.yaml config --quiet
+          docker compose -f deploy/docker/compose.host-network.yaml config --quiet
