@@ -51,11 +51,15 @@ if pct status "$CTID" >/dev/null 2>&1; then
 	fail "A container with the ID $CTID exists already. Set CTID to a free one."
 fi
 
-echo "Looking for the newest Debian template."
+# The template must match the host's CPU: Proxmox VE lists amd64 and arm64 templates side by side,
+# and a container made from the other one never starts.
+arch=$(dpkg --print-architecture)
+
+echo "Looking for the newest Debian template for $arch."
 pveam update >/dev/null
 template=$(pveam available --section system | awk '{ print $2 }' |
-	grep -E '^debian-[0-9]+-standard_' | sort -V | tail -n 1)
-[ -n "$template" ] || fail "Proxmox VE lists no Debian template."
+	grep -E "^debian-[0-9]+-standard_.*_${arch}\.tar\." | sort -V | tail -n 1)
+[ -n "$template" ] || fail "Proxmox VE lists no Debian template for $arch."
 if ! pveam list "$TEMPLATE_STORAGE" | grep -q "$template"; then
 	echo "Downloading $template to $TEMPLATE_STORAGE."
 	pveam download "$TEMPLATE_STORAGE" "$template" >/dev/null
@@ -78,6 +82,9 @@ pct create "$CTID" "$TEMPLATE_STORAGE:vztmpl/$template" \
 	--net0 "$network" \
 	--onboot 1 \
 	--start 1 >/dev/null
+
+pct status "$CTID" | grep -q running ||
+	fail "Container $CTID did not start. Run pct start $CTID to see why."
 
 echo "Waiting for the container's network."
 for _ in $(seq 1 60); do
