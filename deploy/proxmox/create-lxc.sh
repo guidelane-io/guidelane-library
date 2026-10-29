@@ -97,11 +97,13 @@ pct exec "$CTID" -- getent hosts downloads.guidelane.io >/dev/null 2>&1 ||
 	fail "Container $CTID cannot reach downloads.guidelane.io. Check its network, then run the installer in it."
 
 echo "Installing Guidelane Library in container $CTID."
-pct exec "$CTID" -- env DEBIAN_FRONTEND=noninteractive sh -c \
+# pct exec passes on the host's LANG, whose locale the Debian template does not have; C.UTF-8 is
+# built in, so apt and perl stay quiet.
+pct exec "$CTID" -- env LANG=C.UTF-8 LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive sh -c \
 	'apt-get update -qq && apt-get install -y -qq curl ca-certificates >/dev/null'
 # The name reaches the installer as a variable of the container's shell, so it is never re-parsed.
 # shellcheck disable=SC2016
-pct exec "$CTID" -- env LIBRARY_NAME="$LIBRARY_NAME" sh -c \
+pct exec "$CTID" -- env LANG=C.UTF-8 LC_ALL=C.UTF-8 LIBRARY_NAME="$LIBRARY_NAME" sh -c \
 	'curl -fsSL https://downloads.guidelane.io/library/install.sh | sh -s -- --name "$LIBRARY_NAME"'
 
 echo
