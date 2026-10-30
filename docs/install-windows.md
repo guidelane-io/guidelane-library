@@ -54,4 +54,6 @@ program and restarts the service, and leaves the data as it is.
 ```
 
 This stops and removes the service, its firewall rule and the program, and keeps
-`C:\ProgramData\Guidelane\Library`. Delete that folder too if you no longer need the guides.
+`C:\ProgramData\Guidelane\Library`. A program can't delete itself while it runs, so the
+program and its folder are deleted a moment after the command ends. Delete
+`C:\ProgramData\Guidelane\Library` too if you no longer need the guides.
