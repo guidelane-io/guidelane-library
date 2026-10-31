@@ -2,30 +2,30 @@
 
 ## With the installer
 
-On a Linux machine with systemd, run:
+On a Linux host with systemd, run:
 
 ```sh
 curl -fsSL https://downloads.guidelane.io/library/install.sh | sudo sh
 ```
 
-To give the server a name on your network, or to install a given version:
+To set the server's name, or to install a specific version:
 
 ```sh
 curl -fsSL https://downloads.guidelane.io/library/install.sh | sudo sh -s -- --name "Acme library"
-curl -fsSL https://downloads.guidelane.io/library/install.sh | sudo sh -s -- --version 0.1.0
+curl -fsSL https://downloads.guidelane.io/library/install.sh | sudo sh -s -- --version 1.0.1
 ```
 
-The installer does the following:
+The installer:
 
-1. It downloads the server for your machine's architecture and checks its SHA-256 against the
-   release's published checksum. Without `--version`, it installs the latest release.
-2. It installs the binary to `/usr/local/bin/guidelane-library`.
-3. It creates the system user `guidelane`, and the data folder `/var/lib/guidelane-library`,
-   which only that user can open.
-4. It sets the server up in the data folder, once.
-5. It writes the systemd unit `guidelane-library.service`, which starts the server at boot, and
-   then starts the service.
-6. It prints the address of the admin page.
+1. Downloads the server for your host's architecture and verifies its SHA-256 checksum against
+   the published one. Without `--version`, it installs the latest release.
+2. Installs the binary to `/usr/local/bin/guidelane-library`.
+3. Creates the system user `guidelane` and the data folder `/var/lib/guidelane-library`, which
+   only that user can open.
+4. Sets up the server in the data folder, if it isn't set up yet.
+5. Writes the systemd unit `guidelane-library.service`, which starts the server at boot, and
+   starts the service.
+6. Prints the address of the admin page.
 
 The setup code for the admin page is in the server's log:
 
@@ -33,9 +33,9 @@ The setup code for the admin page is in the server's log:
 sudo journalctl -u guidelane-library
 ```
 
-Then go on with [First start](first-start.md).
+Then continue with [First start](first-start.md).
 
-To read the installer before you run it, download it first. It is also in this repository as
+To review the installer before you run it, download it first. It is also in this repository as
 [`install.sh`](../install.sh).
 
 ```sh
@@ -44,12 +44,12 @@ less install.sh
 sudo sh install.sh --dry-run
 ```
 
-With `--dry-run`, the installer downloads and checks the server and prints every change it would
+With `--dry-run`, the installer downloads and verifies the server and lists every change it would
 make, without changing anything.
 
 ### Run the server's commands
 
-Run them as the server's user, so the server can still read the files they write:
+Run commands as the server's user, so that the server can still read the files they create:
 
 ```sh
 sudo -u guidelane guidelane-library --config /var/lib/guidelane-library/library.toml invite
@@ -58,8 +58,8 @@ sudo -u guidelane guidelane-library --config /var/lib/guidelane-library/library.
 
 ### Upgrade
 
-Run the installer again. It replaces the binary and restarts the service, and leaves the data
-folder as it is.
+Run the installer again. It replaces the binary, restarts the service, and doesn't change the
+data folder.
 
 ### Remove
 
@@ -68,15 +68,15 @@ curl -fsSL https://downloads.guidelane.io/library/install.sh | sudo sh -s -- --u
 ```
 
 This stops and removes the service and the binary, and keeps the data folder. Add `--purge` to
-remove the data folder and the `guidelane` user too. That deletes every guide.
+also remove the data folder and the `guidelane` user. This deletes all guides.
 
-## By hand
+## Manual install
 
 Download the package for your architecture from `https://downloads.guidelane.io/library/<version>/`
-and check it against that folder's `SHA256SUMS`:
+and verify it against the `SHA256SUMS` file in the same folder:
 
 ```sh
-version=0.1.0
+version=1.0.1
 target=x86_64-unknown-linux-musl   # or aarch64-unknown-linux-musl
 curl -fsSLO "https://downloads.guidelane.io/library/$version/guidelane-library-$version-$target.tar.gz"
 curl -fsSLO "https://downloads.guidelane.io/library/$version/SHA256SUMS"
@@ -116,8 +116,8 @@ ReadWritePaths=/var/lib/guidelane-library
 WantedBy=multi-user.target
 ```
 
-`run --init` sets the server up on its first start, and runs it as it is on every later start.
-Then start the service:
+`run --init` sets up the server on first start and runs the existing setup on every later
+start. Then start the service:
 
 ```sh
 sudo systemctl daemon-reload
@@ -127,8 +127,8 @@ sudo journalctl -u guidelane-library
 
 ## Without systemd
 
-On a machine without systemd, such as Alpine Linux with OpenRC, run the same command from your
-service manager, as the server's own user:
+On a host without systemd, such as Alpine Linux with OpenRC, run the same command from your
+service manager, as the server's user:
 
 ```sh
 guidelane-library --config /var/lib/guidelane-library/library.toml run --init --data .

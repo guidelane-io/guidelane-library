@@ -19,8 +19,8 @@
 #   MEMORY_MB         The container's memory in MB. 1024 unless set.
 #   CORES             The container's CPU cores. 1 unless set.
 #
-# The container is unprivileged, starts with the host, and is on the bridge like any other
-# computer on your network, so Guidelane Studio finds the server there over mDNS.
+# The container is unprivileged, starts with the host, and is connected to the bridge like any
+# other device on your network, so Guidelane Studio can find the server over mDNS.
 
 set -euo pipefail
 

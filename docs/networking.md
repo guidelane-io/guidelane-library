@@ -2,62 +2,62 @@
 
 ## Ports
 
-Devices reach the server on TCP port 7443, and so does a browser that opens the admin page.
-Allow the port through the host's firewall, and through your VPN for people who work from home.
-The Windows service adds its own firewall rule. On Linux and macOS, you add the rule.
+Devices and the admin page connect to the server on TCP port 7443. Allow this port through the
+host's firewall, and through your VPN for users who work remotely. The Windows service adds its
+own firewall rule. On Linux and macOS, you need to add the rule yourself.
 
-To use another port, set `listen` in the config file, such as `listen = "0.0.0.0:8443"`, and
+To use a different port, set `listen` in the config file, such as `listen = "0.0.0.0:8443"`, and
 restart the server. See [Configuration and commands](configuration.md).
 
-The server listens on every address of its machine unless the config file names one. To limit
-the server to one network, give its address on that network, such as
-`listen = "192.168.1.20:7443"`.
+By default, the server listens on all of the host's network addresses. To limit it to one
+network, set its address on that network, such as `listen = "192.168.1.20:7443"`.
 
-## Finding the server: mDNS
+## Finding the server with mDNS
 
-The server announces itself on its local network over mDNS (multicast DNS, UDP port 5353) as
-`_guidelane-lib._tcp`, under its name. Guidelane Studio lists the servers it hears on its Join
+The server announces itself on the local network over mDNS (multicast DNS, UDP port 5353) as
+`_guidelane-lib._tcp`, under its name. Guidelane Studio lists the servers it finds on its Join
 page.
 
-mDNS reaches only the local network segment. It does not cross:
+mDNS only works within a local network segment. It doesn't pass through:
 
-- routers between subnets, unless they relay mDNS,
-- a VPN,
-- Docker's own networks, Docker Desktop on macOS and Windows, or a Kubernetes pod network.
+- routers between subnets, unless they relay mDNS
+- a VPN
+- Docker's own networks, Docker Desktop on macOS and Windows, or a Kubernetes pod network
 
-That is fine: an announcement is only a convenience. Devices that do not hear it join the server
-by its address, a join link or managed settings. The admin page's Server tab says whether the
-announcement is working.
+This is not a problem, because the announcement is only a convenience. Devices that don't see it
+can join with the server's address, a join link or managed settings. The Server tab of the admin
+page shows whether the announcement is working.
 
-An announcement proves nothing about the server. A device checks the server when it joins.
+Devices don't trust a server because of its announcement. A device verifies the server when it
+joins.
 
-## A host name
+## Host name
 
-Devices reach the server at its IP address unless you give it a name. To use one, such as
-`library.example.com`:
+Devices connect to the server by its IP address unless you give the server a host name. To use a
+name such as `library.example.com`:
 
-1. In your company's DNS, create a record for the name that points at the server's machine. On
-   a single network, the machine's own `.local` name works too.
-2. On the admin page's Server tab, enter the name under "Address" and save. The server looks the
-   name up and says whether it points to this server.
+1. In your company's DNS, create a record for the name that points to the server's host. On a
+   single network, the host's `.local` name also works.
+2. On the Server tab of the admin page, enter the name under "Address" and save. The server looks
+   up the name and tells you whether it points to this server.
 
-A device may get different DNS answers than the server does, so the server saves the name even
-when the check fails. The server puts the name in every invitation and join link, and gives it
-to devices that find the server on the network.
+Devices can get different DNS results than the server, so the server saves the name even if the
+check fails. The server includes the name in every invitation and join link, and sends it to
+devices that find the server on the network.
 
-The name needs no certificate. Guidelane Studio checks the server by its key, whatever name it
-uses to reach the server. A certificate from your company's authority must include the name. See
-[Certificates](certificates.md).
+The name doesn't need a certificate. Guidelane Studio verifies the server by its key, whatever
+name it uses to connect. If you use a certificate from your company's certificate authority, it
+must include the name. See [Certificates](certificates.md).
 
 ## Load balancers and proxies
 
-The server serves TLS itself, and devices check its key. Anything in front of it must pass the
-TLS connection through untouched: a plain TCP load balancer, port forwarding, or TLS passthrough.
-A reverse proxy that ends TLS and opens a new connection to the server does not work, because
-devices would see the proxy's key instead of the server's.
+The server handles TLS itself, and devices verify its key. Anything in front of the server must
+pass the TLS connection through unchanged: a plain TCP load balancer, port forwarding or TLS
+passthrough. A reverse proxy that terminates TLS and opens a new connection to the server
+doesn't work, because devices would see the proxy's key instead of the server's.
 
 ## The internet
 
-Never expose the server to the internet. It has no user accounts: every device that joined can
-read, replace and delete every guide. Keep it on your network, and let people who work from home
-reach it through your VPN.
+Never expose the server to the internet. The server has no user accounts, and every connected
+device can read, replace and delete every guide. Keep it on your network, and give remote users
+access through your VPN.

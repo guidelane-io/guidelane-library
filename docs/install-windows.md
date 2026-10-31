@@ -1,6 +1,6 @@
 # Install on Windows
 
-The server installs itself as a Windows service. Download it and extract it in PowerShell:
+The server runs as a Windows service. Download and extract it in PowerShell:
 
 ```powershell
 $latest = Invoke-RestMethod https://downloads.guidelane.io/library/latest.json
@@ -9,32 +9,32 @@ Invoke-WebRequest $latest.targets.'x86_64-pc-windows-msvc'.url -OutFile guidelan
 Expand-Archive guidelane-library.zip
 ```
 
-The third line prints `True` when the download matches its published SHA-256. For a given
-version, download `guidelane-library-<version>-x86_64-pc-windows-msvc.zip` and `SHA256SUMS`
-from `https://downloads.guidelane.io/library/<version>/` instead.
+The third line prints `True` if the download matches its published SHA-256 checksum. To install
+a specific version, download `guidelane-library-<version>-x86_64-pc-windows-msvc.zip` and
+`SHA256SUMS` from `https://downloads.guidelane.io/library/<version>/` instead.
 
-Then open PowerShell as administrator, go to the folder that holds `guidelane-library.exe`, and
-run:
+Then open PowerShell as administrator, go to the folder that contains `guidelane-library.exe`,
+and run:
 
 ```powershell
 .\guidelane-library.exe service install
 ```
 
-This command does the following:
+This command:
 
-- It copies the server to `C:\Program Files\Guidelane\Library`.
-- It sets the server up in `C:\ProgramData\Guidelane\Library`, which only the service,
-  administrators and the system can read.
-- It adds a Windows Firewall rule for the server.
-- It starts the service "Guidelane Library", which starts with Windows.
+- Copies the server to `C:\Program Files\Guidelane\Library`.
+- Sets up the server in `C:\ProgramData\Guidelane\Library`, which only the service,
+  administrators and the SYSTEM account can read.
+- Adds a Windows Firewall rule for the server.
+- Starts the "Guidelane Library" service, which starts automatically with Windows.
 
-The address of the admin page and its setup code are in the service's log:
+The admin page's address and the setup code are in the service's log:
 
 ```powershell
 Get-Content C:\ProgramData\Guidelane\Library\library.log
 ```
 
-Then go on with [First start](first-start.md).
+Then continue with [First start](first-start.md).
 
 ## Run the server's commands
 
@@ -44,8 +44,8 @@ Then go on with [First start](first-start.md).
 
 ## Upgrade
 
-Download the new version and run `service install` with the new program. It replaces the
-program and restarts the service, and leaves the data as it is.
+Download the new version and run `service install` from it. This replaces the program, restarts
+the service, and doesn't change the data.
 
 ## Remove
 
@@ -54,6 +54,6 @@ program and restarts the service, and leaves the data as it is.
 ```
 
 This stops and removes the service, its firewall rule and the program, and keeps
-`C:\ProgramData\Guidelane\Library`. A program can't delete itself while it runs, so the
-program and its folder are deleted a moment after the command ends. Delete
-`C:\ProgramData\Guidelane\Library` too if you no longer need the guides.
+`C:\ProgramData\Guidelane\Library`. A program can't delete itself while it's running, so the
+program and its folder are deleted a moment after the command finishes. If you no longer need
+the guides, also delete `C:\ProgramData\Guidelane\Library`.

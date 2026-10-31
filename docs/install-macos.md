@@ -1,8 +1,8 @@
 # Install on macOS
 
-There are two ways to install the server on macOS. The installer sets the server up as a system
-service that runs at boot under a user of its own. Homebrew is quicker to set up, and keeps the
-server with your other Homebrew packages.
+You can install the server on macOS in two ways. The installer sets up the server as a system
+service that starts at boot and runs under its own user. Homebrew is quicker to set up and
+manages the server together with your other Homebrew packages.
 
 ## With the installer
 
@@ -10,19 +10,20 @@ server with your other Homebrew packages.
 curl -fsSL https://downloads.guidelane.io/library/install.sh | sudo sh
 ```
 
-The installer works as it does on Linux (see [Linux](install-linux.md)), with these differences:
+The installer works the same way as on Linux (see [Linux](install-linux.md)), with these
+differences:
 
 - The server's user is `_guidelane`, a hidden system user.
 - The service is the launchd daemon `/Library/LaunchDaemons/io.guidelane.library.plist`, which
-  starts at boot, before anyone signs in.
-- The log, with the setup code for the admin page, is `/var/log/guidelane-library.log`:
+  starts at boot, before any user signs in.
+- The log, which contains the setup code for the admin page, is `/var/log/guidelane-library.log`:
 
   ```sh
   sudo cat /var/log/guidelane-library.log
   ```
 
-The same `--name`, `--version`, `--dry-run`, `--uninstall` and `--purge` options apply. Run the
-server's other commands as its user:
+The `--name`, `--version`, `--dry-run`, `--uninstall` and `--purge` options work the same way.
+Run the server's other commands as its user:
 
 ```sh
 sudo -u _guidelane guidelane-library --config /var/lib/guidelane-library/library.toml invite
@@ -35,12 +36,12 @@ brew install guidelane-io/tap/guidelane-library
 sudo brew services start --sudo-service-user "$(whoami)" guidelane-library
 ```
 
-With `sudo`, the server runs as a launchd daemon that starts at boot, and
-`--sudo-service-user` keeps it running as your user rather than as root. Without `sudo`, it
-runs as a launch agent, which runs only while you are signed in to the Mac.
+With `sudo`, the server runs as a launchd daemon that starts at boot, and `--sudo-service-user`
+runs it as your user instead of root. Without `sudo`, it runs as a launch agent, which only runs
+while you are signed in to the Mac.
 
-The server keeps its data in `$(brew --prefix)/var/guidelane-library`. Its log, with the address
-of the admin page and its setup code, is `$(brew --prefix)/var/log/guidelane-library.log`:
+The server stores its data in `$(brew --prefix)/var/guidelane-library`. Its log, which contains
+the admin page's address and the setup code, is `$(brew --prefix)/var/log/guidelane-library.log`:
 
 ```sh
 cat "$(brew --prefix)/var/log/guidelane-library.log"
@@ -53,13 +54,13 @@ guidelane-library --config "$(brew --prefix)/var/guidelane-library/library.toml"
 ```
 
 To upgrade, run `brew upgrade guidelane-library`, then `sudo brew services restart
-guidelane-library`. To remove it, run `sudo brew services stop guidelane-library` and `brew
-uninstall guidelane-library`. Homebrew leaves the data folder, so delete
-`$(brew --prefix)/var/guidelane-library` too if you no longer need the guides.
+guidelane-library`. To remove the server, run `sudo brew services stop guidelane-library` and
+`brew uninstall guidelane-library`. Homebrew doesn't delete the data folder, so also delete
+`$(brew --prefix)/var/guidelane-library` if you no longer need the guides.
 
-## The Mac's firewall
+## macOS firewall
 
-If the Mac's firewall is on, allow the server through it:
+If the macOS firewall is turned on, allow the server through it:
 
 ```sh
 sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /usr/local/bin/guidelane-library
@@ -70,10 +71,11 @@ With Homebrew, the binary is at `$(brew --prefix)/opt/guidelane-library/bin/guid
 
 ## Keep the Mac awake
 
-A Mac that sleeps stops answering devices. To keep it awake while it is plugged in, run:
+When the Mac goes to sleep, devices can't connect to the server. To keep the Mac awake while it's
+plugged in, run:
 
 ```sh
 sudo pmset -c sleep 0
 ```
 
-Then go on with [First start](first-start.md).
+Then continue with [First start](first-start.md).

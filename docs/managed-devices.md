@@ -1,109 +1,108 @@
 # Rolling out to managed devices
 
-This guide is for a company that installs Guidelane Studio on its computers through device
-management, such as Jamf Pro, Microsoft Intune, Kandji or Group Policy. When this is set up, a
-person who opens Guidelane Studio for the first time finds it licensed and joined to the
-company's library. Nobody has to type anything or approve a request.
+This guide is for companies that install Guidelane Studio on their devices with device
+management, such as Jamf Pro, Microsoft Intune, Kandji or Group Policy. Once this is set up,
+users who open Guidelane Studio for the first time find it already licensed and connected to the
+company's library. Nobody has to enter anything or approve a request.
 
 ## How it works
 
-Two things make it work. A **deployment key** licenses each computer, and an **enrollment code**
-lets each computer join the server. Both go into Guidelane Studio's managed settings, which your
-device management delivers with the app.
+You need two things: a **deployment key**, which licenses each device, and an **enrollment code**,
+which lets each device join the server. Both go into Guidelane Studio's managed settings, which
+your device management delivers together with the app.
 
 ```mermaid
 sequenceDiagram
     participant MDM as Device management
-    participant Mac as Guidelane Studio on a computer
+    participant Mac as Guidelane Studio on a device
     participant Licenses as License service
     participant Library as Guidelane Library
     MDM->>Mac: Installs the app and its managed settings
-    Note over Mac: The person opens Guidelane Studio
+    Note over Mac: The user opens Guidelane Studio
     Mac->>Licenses: Activates with the deployment key
-    Licenses-->>Mac: A license certificate for this computer, taking one seat
-    Mac->>Library: Joins with the enrollment code, under the computer's name
-    Library-->>Mac: Joined, with no approval needed
+    Licenses-->>Mac: A license certificate for this device, using one seat
+    Mac->>Library: Joins with the enrollment code, under the device's name
+    Library-->>Mac: Joined, without approval
     Note over Mac: The library's guides appear
 ```
 
-The deployment key and the enrollment code are separate on purpose. The license is between
-your company and Guidelane, and the server is yours. The server never sees the deployment key,
+The deployment key and the enrollment code are separate on purpose. The license is between your
+company and Guidelane, and the server belongs to you. The server never sees the deployment key,
 and the license service never sees your server or its guides.
 
 ## 1. Buy seats
 
 Buy Business seats at `https://studio.guidelane.io/buy/business`. The purchase creates your
-organisation in the license portal, `https://studio.guidelane.io/license`, where you sign in
-with the email address you paid with and a code sent to it. With a deployment key, one seat
-covers one computer. With a seat given by email, one seat covers one person on up to 3 of their
-computers.
+organization in the license portal at `https://studio.guidelane.io/license`. To sign in, use the
+email address you paid with and the code sent to it. With a deployment key, one seat covers one
+device. With a seat assigned by email, one seat covers one user on up to 3 of their devices.
 
 ## 2. Create a deployment key
 
 In the license portal, open the Managed devices tab and choose "Create deployment key". The
-portal shows the key once, such as `GLS-7KQ4-M2XD-9PRT-HV3B`. Copy it then.
+portal shows the key only once, such as `GLS-7KQ4-M2XD-9PRT-HV3B`, so copy it right away.
 
-Each computer the key activates takes one free seat. When no seat is free, the next computer
-stays unlicensed until you buy more seats or free one. The Managed devices tab lists every
-computer the key activated. Choose "Remove…" to free a computer's seat.
+Each device the key activates uses one free seat. If no seat is free, the next device stays
+unlicensed until you buy more seats or free one up. The Managed devices tab lists every device the
+key activated. To free a device's seat, choose "Remove…".
 
 ## 3. Create an enrollment code
 
 On the server's admin page, open the Enrollment codes tab and choose "New enrollment code…".
-Choose how many computers the code may let join, and until which day. The page shows the code once,
-such as `K7QX-2M9P-CS3N-H4TR`.
+Choose how many devices can join with the code and the day it expires. The page shows the code
+only once, such as `K7QX-2M9P-CS3N-H4TR`.
 
 ## 4. Create the settings file
 
-Beside the new enrollment code, the admin page offers two files that hold the server's address
-and the code. Choose "Download for macOS" to save a configuration profile (`.mobileconfig`), or
-"Download for Windows" to save a registry file (`.reg`).
+Next to the new enrollment code, the admin page offers two files that contain the server's
+address and the code. Choose "Download for macOS" to save a configuration profile
+(`.mobileconfig`), or "Download for Windows" to save a registry file (`.reg`).
 
-Paste the deployment key under "Deployment key (optional)" before you download the files, and
-they include the key too. Your browser adds the key to the file, and the key is never sent to the
+To include the deployment key in the files, paste it under "Deployment key (optional)" before
+you download them. Your browser adds the key to the file, and the key is never sent to the
 server.
 
-## 5. Deliver the app and the settings
+## 5. Deploy the app and the settings
 
 **macOS**: Upload the configuration profile to your device management and scope it to the same
-computers as the Guidelane Studio app. In Jamf Pro, upload it as a configuration profile. In
+devices as the Guidelane Studio app. In Jamf Pro, upload it as a configuration profile. In
 Microsoft Intune, add it as a custom configuration profile for macOS. In Kandji, add it as a
 custom profile. The profile's preference domain is `io.guidelane.studio`.
 
-**Windows**: Set the values under `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Guidelane\Studio`. Import
-the registry file with `reg import`, set the values with Group Policy Preferences, or set them
-with a script from your device management. Guidelane Studio also reads the same values under
-`HKEY_CURRENT_USER`, for a policy set for each user.
+**Windows**: Set the values under `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Guidelane\Studio`. You
+can import the registry file with `reg import`, set the values with Group Policy Preferences, or
+set them with a script from your device management. Guidelane Studio also reads the same values
+under `HKEY_CURRENT_USER`, for policies set per user.
 
-## 6. What people see
+## 6. What users see
 
-When a person opens Guidelane Studio for the first time:
+When a user opens Guidelane Studio for the first time:
 
-- Settings shows the license as the organisation's, and "Deactivate" does not appear.
-- The server appears under Library as the organisation's, and "Leave" does not appear.
-- The computer joins under its own name. If another device has that name already, the name gets
-  a number, as in "MacBook Pro (2)".
+- Settings shows the license as the organization's, without a "Deactivate" option.
+- The server appears under Library as the organization's, without a "Leave" option.
+- The device joins under its own name. If another device already has that name, a number is
+  added, such as "MacBook Pro (2)".
 
-The admin page lists each computer that joined, and the license portal lists each computer the
+The admin page lists every device that joined, and the license portal lists every device the
 deployment key activated.
 
-## The settings
+## Settings reference
 
-| Setting | What it does |
+| Setting | Description |
 |---|---|
 | `LibraryAddress` | The server to join, such as `library.example.com` or `library.example.com:7443`. |
-| `LibraryEnrollmentCode` | An enrollment code. With it, the computer joins at once. Without it, Guidelane Studio asks to join, and the request waits under "Join requests" on the admin page. |
-| `LibraryFingerprint` | The fingerprint of the server's key, from the admin page's Server tab. Guidelane Studio then joins only a server with that key. |
-| `LicenseKey` | The deployment key. It activates the computer when Guidelane Studio first opens. |
+| `LibraryEnrollmentCode` | An enrollment code. With it, the device joins immediately. Without it, Guidelane Studio sends a join request, which waits under "Join requests" on the admin page. |
+| `LibraryFingerprint` | The fingerprint of the server's key, from the Server tab of the admin page. Guidelane Studio then only joins a server with that key. |
+| `LicenseKey` | The deployment key. It activates the device the first time Guidelane Studio opens. |
 
-Each setting is optional. A profile with `LicenseKey` alone licenses computers that join a
-server some other way. A profile with `LibraryAddress` and `LibraryEnrollmentCode` alone joins
-computers that already have a license.
+All settings are optional. A profile with only `LicenseKey` licenses devices that join a server in
+another way. A profile with only `LibraryAddress` and `LibraryEnrollmentCode` connects devices
+that already have a license.
 
-Guidelane Studio reads a value only when your device management sets it, so a person cannot
-replace it with a value of their own on the computer.
+Guidelane Studio only reads these values when your device management sets them, so users can't
+override them on their device.
 
-A configuration profile written by hand looks like this. Create your own two UUIDs with
+A configuration profile written by hand looks like this. Generate your own two UUIDs with
 `uuidgen`.
 
 ```xml
@@ -155,30 +154,30 @@ Windows Registry Editor Version 5.00
 "LicenseKey"="GLS-7KQ4-M2XD-9PRT-HV3B"
 ```
 
-## When people come and go
+## Replacing devices and changing keys
 
-- **A computer is replaced or retired**: first take it out of the configuration profile's scope
-  in your device management. Then remove it under Managed devices in the license portal to free
-  its seat, and disconnect it on the admin page's Devices tab so it can no longer reach the
-  server. A removed computer loses its license the next time it is online. While the profile
-  still applies to it, Guidelane Studio activates it again with the deployment key the next time
-  it opens, and it takes a seat again.
-- **The deployment key leaks**: choose "Create a new key…" under Managed devices. Computers that
-  were activated keep working. Put the new key in the profile for computers that are added
+- **A device is replaced or retired**: first remove it from the configuration profile's scope in
+  your device management. Then remove it under Managed devices in the license portal to free its
+  seat, and disconnect it on the Devices tab of the admin page so it can no longer connect to the
+  server. A removed device loses its license the next time it goes online. As long as the profile
+  still applies to the device, Guidelane Studio activates it again with the deployment key the
+  next time it opens, and the device uses a seat again.
+- **The deployment key is leaked**: choose "Create a new key…" under Managed devices. Devices
+  that are already activated keep working. Add the new key to the profile for devices you add
   later.
-- **The enrollment code leaks or runs out**: choose "Revoke…" on the Enrollment codes tab, create
-  a new code and update the profile. Computers that joined with the old code stay joined.
+- **The enrollment code is leaked or used up**: choose "Revoke…" on the Enrollment codes tab,
+  create a new code and update the profile. Devices that joined with the old code stay connected.
 
-## Computers that are not managed
+## Unmanaged devices
 
-People on computers you do not manage get a seat of their own. In the license portal, open the
-Users tab, enter their email address, and choose "Give a seat". They receive a key by email that
-works on up to 3 of their computers. They join the server by finding it on the network, by its
-address, or with a join link from "Invite a device" on the admin page.
+Users on devices you don't manage get their own seat. In the license portal, open the Users tab,
+enter the user's email address, and choose "Give a seat". The user receives a key by email that
+works on up to 3 of their devices. They can join the server by finding it on the network, by
+entering its address, or with a join link from "Invite a device" on the admin page.
 
 ## Who can read the settings
 
-Anyone who uses a managed computer can read its managed settings, the enrollment code and the
-deployment key among them. Both have limits you set. An enrollment code lets only as many
-computers join as you allowed, until the day you chose, and you can revoke it. A deployment key
-activates only as many computers as you have free seats, and you can replace it.
+Anyone who uses a managed device can read its managed settings, including the enrollment code and
+the deployment key. Both have limits that you set. An enrollment code only lets as many devices
+join as you allowed, until the day you chose, and you can revoke it. A deployment key only
+activates as many devices as you have free seats, and you can replace it.
